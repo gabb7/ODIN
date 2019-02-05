@@ -121,13 +121,13 @@ class ODIN(object):
         Builds the numpy array that defines the bounds for gamma.
         :param bounds: of the form (lower_bound, upper_bound).
         """
-        self.gamma_bounds = np.ones([self.n_states, 2])
+        self.gamma_bounds = np.array([1.0, 1.0])
         if bounds is None:
-            self.gamma_bounds[:, 0] = np.log(1e-6)
-            self.gamma_bounds[:, 1] = np.inf
+            self.gamma_bounds[0] = np.log(1e-6)
+            self.gamma_bounds[1] = np.inf
         else:
-            self.gamma_bounds[:, 0] = np.log(np.array(bounds[0]))
-            self.gamma_bounds[:, 1] = np.log(np.array(bounds[1]))
+            self.gamma_bounds[0] = np.log(np.array(bounds[0]))
+            self.gamma_bounds[1] = np.log(np.array(bounds[1]))
         return
 
     def _compute_standardization_data(self, state_normalization: bool,
@@ -440,7 +440,7 @@ class ODIN(object):
             else:
                 self.risk_optimizer.minimize(session)
             theta = session.run(self.trainable.theta)
-            gamma = session.run(self.gamma)
+            gamma = session.run(self.gamma).reshape(-1)
             x = session.run(tf.squeeze(self.x) * self.system_std_dev
                             + self.system_means)
         tf.reset_default_graph()
