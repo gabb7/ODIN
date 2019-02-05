@@ -44,7 +44,6 @@ class GaussianProcess(object):
         self._initialize_variables(use_single_gp)
         # GP Regression matrices
         self.c_phi_matrices = None
-        self.c_phi_matrices_noiseless = None
         self.cross_c_phi_matrices = None
         self.diff_c_phi_matrices = None
         self.c_phi_diff_matrices = None
@@ -106,10 +105,7 @@ class GaussianProcess(object):
         :param t: time stamps of the training set;
         :param t_new: time stamps of the test points (usually same as before);
         """
-        self.c_phi_matrices =\
-            self._build_c_phi_matrices(t)
-        self.c_phi_matrices_noiseless =\
-            self._build_c_phi_matrices_noiseless(t)
+        self.c_phi_matrices = self._build_c_phi_matrices(t)
         self.cross_c_phi_matrices =\
             self._build_cross_c_phi_matrices(t, t_new)
         self.diff_c_phi_matrices = \
@@ -121,17 +117,6 @@ class GaussianProcess(object):
         return
 
     def _build_c_phi_matrices(self, t: tf.Tensor) -> tf.Tensor:
-        """
-        Build the covariance matrices K(x_train, x_train) + sigma^2 I.
-        :param t: time stamps of the training set;
-        :return: the tensors containing the matrices.
-        """
-        c_phi_matrices = self.kernel.compute_c_phi(t, t)\
-            + tf.expand_dims(tf.eye(self.n_points, dtype=tf.float64), 0)\
-            * self.likelihood_variances
-        return c_phi_matrices
-
-    def _build_c_phi_matrices_noiseless(self, t: tf.Tensor) -> tf.Tensor:
         """
         Build the covariance matrices K(x_train, x_train) + .
         :param t: time stamps of the training set;
@@ -196,7 +181,10 @@ class GaussianProcess(object):
         :param system: values of the states of the system;
         :return: the TensorFlow tensor with the mean.
         """
-        y_matrix = tf.linalg.solve(self.c_phi_matrices,
+        y_matrix = tf.linalg.solve(self.c_phi_matrices
+                                   + tf.expand_dims(tf.eye(self.n_points,
+                                                           dtype=tf.float64),
+                                                    0) * self.jitter,
                                    tf.expand_dims(system, -1))
         mu = tf.matmul(self.cross_c_phi_matrices, y_matrix)
         return mu
@@ -206,9 +194,12 @@ class GaussianProcess(object):
         Compute the posterior variance matrix of the training points.
         :return: the TensorFlow tensor with the variance matrix.
         """
-        a_matrix = tf.linalg.solve(self.c_phi_matrices,
+        a_matrix = tf.linalg.solve(self.c_phi_matrices
+                                   + tf.expand_dims(tf.eye(self.n_points,
+                                                           dtype=tf.float64),
+                                                    0) * self.jitter,
                                    self.cross_c_phi_matrices)
-        fvar = self.c_phi_matrices_noiseless\
+        fvar = self.c_phi_matrices\
             - tf.matmul(self.cross_c_phi_matrices, a_matrix, transpose_a=True)
         return fvar
 
@@ -218,7 +209,7 @@ class GaussianProcess(object):
         :param system: values of the states of the system;
         :return: the TensorFlow tensor with the mean.
         """
-        v_matrix = tf.linalg.solve(self.c_phi_matrices_noiseless,
+        v_matrix = tf.linalg.solve(self.c_phi_matrices,
                                    tf.expand_dims(system, -1))
         mu = tf.matmul(self.diff_c_phi_matrices,
                        v_matrix)
@@ -231,7 +222,7 @@ class GaussianProcess(object):
         """
         second_term = tf.matmul(
             self.diff_c_phi_matrices,
-            tf.linalg.solve(self.c_phi_matrices_noiseless,
+            tf.linalg.solve(self.c_phi_matrices,
                             self.c_phi_diff_matrices))
         fvar = self.diff_c_phi_diff_matrices - second_term\
             + tf.expand_dims(tf.eye(self.n_points, dtype=tf.float64), 0) \
@@ -244,8 +235,11 @@ class GaussianProcess(object):
         :param system: values of the states of the system;
         :return: the tensor containing the log-likelihood.
         """
-        logdets_cov_matrices = tf.linalg.logdet(self.c_phi_matrices)
-        y_matrix = tf.linalg.solve(self.c_phi_matrices,
+        c_phi = self.c_phi_matrices\
+            + tf.expand_dims(tf.eye(self.n_points, dtype=tf.float64), 0)\
+            * self.jitter
+        logdets_cov_matrices = tf.linalg.logdet(c_phi)
+        y_matrix = tf.linalg.solve(c_phi,
                                    tf.expand_dims(system, -1))
         first_term = tf.reduce_sum(system * tf.squeeze(y_matrix), axis=1)
         log_likelihood = -0.5 * (first_term + logdets_cov_matrices)
