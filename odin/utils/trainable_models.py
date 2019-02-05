@@ -13,7 +13,7 @@ import numpy as np
 import tensorflow as tf
 
 
-class TrainableModelODE(ABC):
+class TrainableModel(ABC):
     """
     Abstract class of a trainable dynamical system. The parameters to be
     estimated are contained in the attribute self.theta as TensorFlow Variables
@@ -74,7 +74,7 @@ class TrainableModelODE(ABC):
         return tf.constant()
 
 
-class TrainableLotkaVolterraODE(TrainableModelODE):
+class TrainableLotkaVolterra(TrainableModel):
     """
     Trainable Lotka-Volterra model.
     """
@@ -109,7 +109,7 @@ class TrainableLotkaVolterraODE(TrainableModelODE):
         return gradient_samples
 
 
-class TrainableFitzHughNagumoODE(TrainableModelODE):
+class TrainableFitzHughNagumo(TrainableModel):
     """
     Trainable FitzHug-Nagumo model.
     """
@@ -144,7 +144,7 @@ class TrainableFitzHughNagumoODE(TrainableModelODE):
         return gradient_samples
 
 
-class TrainableProteinTransductionODE(TrainableModelODE):
+class TrainableProteinTransduction(TrainableModel):
     """
     Trainable 5D Protein transduction model.
     """
@@ -185,7 +185,7 @@ class TrainableProteinTransductionODE(TrainableModelODE):
         return gradient_samples
 
 
-class TrainableLorenz96ODE(TrainableModelODE):
+class TrainableLorenz96(TrainableModel):
     """
     Trainable Lorenz '96 model.
     """
