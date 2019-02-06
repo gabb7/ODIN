@@ -7,7 +7,7 @@ February 2019
 
 
 # Libraries
-from odin.utils.differentiable_kernels import *
+from odin.utils.kernels import *
 import tensorflow as tf
 import numpy as np
 import sys
