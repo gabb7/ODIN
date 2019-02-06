@@ -52,34 +52,43 @@ class GaussianProcess(object):
         return
 
     @staticmethod
-    def _initialize_kernel(input_dim: int, gp_kernel: str = 'RBF',
+    def _initialize_kernel(input_dim: int,
+                           kernel: str = 'RBF',
                            use_single_gp: bool = False)\
             -> GenericKernel:
         """
-        Initialize the kernel of the gaussian Process.
-        :param gp_kernel: string object describing the type of kernel to
-        initialize.
-        :return: the GenericDifferentiableKernel object.
+        Initialize the kernel of the Gaussian Process.
+        :param input_dim: number of states;
+        :param kernel: string indicating which kernel to use for regression.
+        Valid options are 'RBF', 'Matern52', 'Matern32', 'RationalQuadratic',
+        'Sigmoid';
+        :param use_single_gp: boolean, indicates whether to use a single set of
+        hyperparameters for all states (useful for extremely scarce data
+        setting).
+        :return: the GenericKernel object.
         """
-        if gp_kernel == 'RBF':
+        if kernel == 'RBF':
             return RBFKernel(input_dim, use_single_gp)
-        elif gp_kernel == 'Matern52':
+        elif kernel == 'Matern52':
             return Matern52Kernel(input_dim, use_single_gp)
-        elif gp_kernel == 'Matern32':
+        elif kernel == 'Matern32':
             return Matern32Kernel(input_dim, use_single_gp)
-        elif gp_kernel == 'RationalQuadratic':
+        elif kernel == 'RationalQuadratic':
             return RationalQuadraticKernel(input_dim,
                                            use_single_gp)
-        elif gp_kernel == 'Sigmoid':
+        elif kernel == 'Sigmoid':
             return SigmoidKernel(input_dim, use_single_gp)
         else:
-            sys.exit("Error: specified gaussian Process kernel not valid")
+            sys.exit("Error: specified Gaussian Process kernel not valid")
 
     def _initialize_variables(self, use_single_gp: bool) -> None:
         """
         Initialize the variance of the log-likelihood of the GP as a TensorFlow
         variable. A logarithm-exponential transformation is used to ensure
         positivity during optimization.
+        :param use_single_gp: boolean, indicates whether to use a single set of
+        hyperparameters for all states (useful for extremely scarce data
+        setting).
         """
         with tf.variable_scope('gaussian_process'):
             if use_single_gp:
@@ -116,13 +125,13 @@ class GaussianProcess(object):
             self._build_diff_c_phi_matrices(t, t_new)
         self.c_phi_diff_matrices = \
             self._build_c_phi_diff_matrices(t, t_new)
-        self.diff_c_phi_diff_matrices = \
-            self._build_test_points_hessian_covariance_matrices(t_new)
+        self.diff_c_phi_diff_matrices =\
+            self._build_diff_c_phi_diff_matrices(t_new)
         return
 
     def _build_c_phi_matrices(self, t: tf.Tensor) -> tf.Tensor:
         """
-        Build the covariance matrices K(x_train, x_train) + sigma^2 I.
+        Build the covariance matrices K(x_train, x_train) + sigma_y^2 I.
         :param t: time stamps of the training set;
         :return: the tensors containing the matrices.
         """
@@ -133,7 +142,7 @@ class GaussianProcess(object):
 
     def _build_c_phi_matrices_noiseless(self, t: tf.Tensor) -> tf.Tensor:
         """
-        Build the covariance matrices K(x_train, x_train) + .
+        Build the covariance matrices K(x_train, x_train).
         :param t: time stamps of the training set;
         :return: the tensors containing the matrices.
         """
@@ -179,7 +188,7 @@ class GaussianProcess(object):
         c_phi_diff_matrices = self.kernel.compute_c_phi_diff(t, t_new)
         return c_phi_diff_matrices
 
-    def _build_test_points_hessian_covariance_matrices(self, t_new: tf.Tensor)\
+    def _build_diff_c_phi_diff_matrices(self, t_new: tf.Tensor)\
             -> tf.Tensor:
         """
         Builds the matrices diff_c_phi_diff: d^2K(t,t') / dt dt'.
