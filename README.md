@@ -1,10 +1,10 @@
 # ODIN
 This repository contains code that implements the ODIN algorithm as presented in the paper:
 
-Philippe Wenk*, Gabriele Abbati*, Stefan Bauer, Michael A Osborne, Andreas Krause and Bernhard Schölkopf (2019). 
-ODIN: ODE-Informed Regression for Parameter and State Inference in Time-Continuous Dynamical Systems.
-
-*: equal contribution
+> [**ODIN: ODE-Informed Regression for Parameter and State Inference in Time-Continuous Dynamical Systems.**](https://arxiv.org/abs/1902.06278)
+> *Philippe Wenk\*, Gabriele Abbati\*, Stefan Bauer, Michael A Osborne, Andreas Krause and Bernhard Schölkopf*. arXiv preprint, 2019.
+> \
+> \*: equal contribution
 
 ## Code
 
