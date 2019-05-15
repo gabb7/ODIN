@@ -301,7 +301,8 @@ class ODIN(object):
         :return: the TensorFlow Tensor that contains the term.
         """
         a_vector = tf.linalg.solve(
-            self.gaussian_process.c_phi_matrices, tf.expand_dims(self.x, -1))
+            self.gaussian_process.c_phi_matrices_noiseless,
+            tf.expand_dims(self.x, -1))
         risk_term = 0.5 * tf.reduce_sum(self.x * tf.squeeze(a_vector))
         return tf.reduce_sum(risk_term)
 
