@@ -108,7 +108,7 @@ class DynamicalSystem(ABC):
                                      size=observed_system.shape)
             observed_system += noise.reshape(observed_system.shape)
         if self.stn_ratio:
-            std_devs_signal = np.std(observed_system, axis=0)
+            std_devs_signal = np.std(observed_system, axis=1)
             std_devs_noise = std_devs_signal / np.sqrt(self.stn_ratio)
             noise = np.random.normal(loc=0.0, scale=1.0,
                                      size=observed_system.shape)
@@ -147,7 +147,7 @@ class DynamicalSystem(ABC):
                                      size=observed_system.shape)
             observed_system += noise.reshape(observed_system.shape)
         if self.stn_ratio:
-            std_devs_signal = np.std(observed_system, axis=0)
+            std_devs_signal = np.std(observed_system, axis=1)
             std_devs_noise = std_devs_signal / np.sqrt(self.stn_ratio)
             noise = np.random.normal(loc=0.0, scale=1.0,
                                      size=observed_system.shape)
